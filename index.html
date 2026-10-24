@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Phone</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#202020;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+.phone{position:relative;width:100%;max-width:430px;height:100dvh;margin:auto;overflow:hidden;background:#f7f7f7}
+.screen{position:absolute;inset:0;display:none;overflow-y:auto;padding-bottom:35px}
+.screen.active{display:block}
+button{font:inherit;cursor:pointer;border:0}
+.status{height:42px;padding:14px 22px 0;display:flex;justify-content:space-between;font-size:13px;font-weight:600}
+.homebar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:115px;height:5px;background:#222;border-radius:9px;z-index:20}
+#lock{background:#6c8190;color:white;text-align:center}
+#lock .homebar{background:white}
+.locktime{font-size:78px;font-weight:200;margin-top:60px}
+.lockdate{font-size:18px}
+.unlock{position:absolute;bottom:90px;width:100%;font-size:15px}
+#pass{background:#6c8190;color:white;text-align:center}
+.dots{display:flex;gap:16px;justify-content:center;margin:45px 0 35px}
+.dot{width:12px;height:12px;border:1.5px solid white;border-radius:50%}
+.dot.filled{background:white}
+.pad{display:grid;grid-template-columns:repeat(3,72px);gap:17px;justify-content:center}
+.pad button{width:72px;height:72px;border-radius:50%;background:#ffffff36;color:white;font-size:28px}
+#home{background:#a7a39b}
+.appgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:23px 9px;padding:30px 18px}
+.app{text-align:center;background:transparent;color:white;font-size:11px}
+.appicon{width:60px;height:60px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 7px;color:#222;font-size:23px}
+.appicon.yellow{background:#fee500}
+.appicon.pink{background:#e98c9c;color:white}
+.appicon.green{background:#55bf76;color:white}
+.dock{position:absolute;bottom:25px;left:12px;right:12px;background:#ffffff66;border-radius:24px;padding:12px;display:flex;justify-content:space-around}
+.dock button{background:#fff;border-radius:13px;width:59px;height:59px;font-size:23px}
+.head{height:55px;display:flex;align-items:center;gap:12px;padding:0 17px;border-bottom:1px solid #eee;background:white}
+.back{background:none;color:#2589c9;font-size:24px}
+.title{font-size:20px;font-weight:700}
+.content{padding:18px;background:white;min-height:calc(100% - 97px)}
+.item{display:flex;gap:12px;align-items:center;padding:15px 2px;border-bottom:1px solid #eee}
+.avatar{width:47px;height:47px;border-radius:50%;background:#ddd;object-fit:cover}
+.small{font-size:12px;color:#999;margin-top:5px}
+.chatbox{padding:15px;background:#b5c6d5;min-height:60vh}
+.bubble{background:white;padding:12px;border-radius:13px;margin:12px 0;max-width:80%;width:max-content}
+.bubble.mine{background:#fee500;margin-left:auto}
+.sendbar{display:flex;gap:8px;padding:12px;background:white}
+.sendbar input{flex:1;min-width:0;padding:12px;border:1px solid #ddd;border-radius:20px}
+.sendbar button{background:#fee500;padding:0 17px;border-radius:12px}
+.tabs{display:flex;justify-content:space-around;padding:12px;background:white;border-top:1px solid #eee}
+.tabs button{background:none;color:#777}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.photos img{width:100%;aspect-ratio:1;object-fit:cover}
+.placeholder{aspect-ratio:1;background:#e7e7e7}
+.call{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #eee}
+.missed{color:#e04444}
+.profile{display:flex;gap:20px;align-items:center;padding:20px 0}
+.stats{display:flex;gap:20px;text-align:center;font-size:13px}
+#viewer{position:absolute;inset:0;background:#000;display:none;align-items:center;justify-content:center;z-index:30}
+#viewer img{max-width:100%;max-height:90%;object-fit:contain}
+#viewer button{position:absolute;top:25px;right:20px;background:none;color:white;font-size:30px}
+</style>
+</head>
+<body>
+<div class="phone">
+
+<section class="screen active" id="lock" onclick="show('pass')">
+<div class="status"><span>9:41</span><span>● ▰</span></div>
+<div class="locktime">9:41</div>
+<div class="lockdate">10月24日 星期六</div>
+<div class="unlock">向上轻扫以解锁</div>
+</section>
+
+<section class="screen" id="pass">
+<div class="status"><span>9:41</span><span>● ▰</span></div>
+<p style="margin-top:80px">输入密码</p>
+<div class="dots" id="dots"></div>
+<div class="pad" id="pad"></div>
+<p id="error" style="height:20px"></p>
+<button style="background:none;color:white" onclick="show('lock')">取消</button>
+</section>
+
+<section class="screen" id="home">
+<div class="status"><span>9:41</span><span>● ▰</span></div>
+<div class="appgrid">
+<button class="app" onclick="show('gallery')"><div class="appicon">▧</div>照片</button>
+<button class="app" onclick="show('chats')"><div class="appicon yellow">TALK</div>KakaoTalk</button>
+<button class="app" onclick="show('instagram')"><div class="appicon pink">◎</div>Instagram</button>
+<button class="app" onclick="show('gallery')"><div class="appicon">▣</div>相机</button>
+<button class="app"><div class="appicon">◷</div>时钟</button>
+<button class="app"><div class="appicon">▤</div>备忘录</button>
+<button class="app"><div class="appicon">A</div>App Store</button>
+<button class="app"><div class="appicon">⚙</div>设置</button>
+<button class="app"><div class="appicon">☁</div>天气</button>
+<button class="app"><div class="appicon">24</div>日历</button>
+<button class="app"><div class="appicon">⌖</div>地图</button>
+<button class="app"><div class="appicon">♫</div>音乐</button>
+<button class="app"><div class="appicon">▶</div>YouTube</button>
+<button class="app"><div class="appicon">▣</div>文件</button>
+</div>
+<div class="dock">
+<button onclick="show('calls')">☎</button>
+<button onclick="show('chats')">▤</button>
+<button>◎</button>
+<button onclick="show('gallery')">▣</button>
+</div>
+</section>
+
+<section class="screen" id="calls">
+<div class="head"><button class="back" onclick="show('home')">‹</button><span class="title">最近通话</span></div>
+<div class="content">
+<div class="call"><div><strong class="missed">啾💕</strong><div class="small">未接来电 · 23通</div></div><span class="small">今天</span></div>
+<div class="call"><div><strong>妈妈</strong><div class="small">已接通 · 2通</div></div><span class="small">昨天</span></div>
+<div class="call"><div><strong>妹妹</strong><div class="small">已接通 · 3通</div></div><span class="small">星期四</span></div>
+</div>
+</section>
+
+<section class="screen" id="chats">
+<div class="head"><button class="back" onclick="show('home')">‹</button><span class="title">KakaoTalk</span></div>
+<div class="content" id="chatlist"></div>
+<div class="tabs"><button>朋友</button><button>聊天</button><button>更多</button></div>
+</section>
+
+<section class="screen" id="chat">
+<div class="head"><button class="back" onclick="show('chats')">‹</button><span class="title" id="chatname">聊天</span></div>
+<div class="chatbox" id="messages"></div>
+<div class="sendbar"><input id="msg" placeholder="输入消息"><button onclick="send()">发送</button></div>
+</section>
+
+<section class="screen" id="gallery">
+<div class="head"><button class="back" onclick="show('home')">‹</button><span class="title">照片</span></div>
+<div class="content">
+<h3>最近项目</h3>
+<p class="small">照片上传后将在这里显示</p>
+<div class="photos" id="photos"></div>
+</div>
+</section>
+
+<section class="screen" id="instagram">
+<div class="head"><button class="back" onclick="show('home')">‹</button><span class="title">Instagram</span></div>
+<div class="content">
+<div class="profile"><div class="avatar"></div><div class="stats"><div><b>17</b><br>帖子</div><div><b>0</b><br>粉丝</div><div><b>0</b><br>关注</div></div></div>
+<strong>My account</strong>
+<p class="small">个人主页预览</p>
+<hr>
+<div class="photos" id="instaphotos"></div>
+</div>
+</section>
+
+<div id="viewer"><button onclick="closeViewer()">×</button><img id="largephoto"></div>
+<div class="homebar" onclick="show('home')"></div>
+</div>
+
+<script>
+let pin="";
+const names=["啾💕","妈妈","妹妹"];
+const conversations={};
+let current="";
+names.forEach(n=>conversations[n]=[]);
+function show(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+if(id==="pass"){pin="";renderDots()}
+}
+function renderDots(){
+document.getElementById("dots").innerHTML=Array.from({length:4},(_,i)=>'<div class="dot '+(i<pin.length?'filled':'')+'"></div>').join("");
+}
+function digit(n){
+if(pin.length>=4)return;
+pin+=n;renderDots();
+if(pin.length===4){
+setTimeout(()=>{
+if(pin==="0907"){document.getElementById("error").textContent="";show("home")}
+else{document.getElementById("error").textContent="密码错误";pin="";renderDots()}
+},180)
+}
+}
+const pad=document.getElementById("pad");
+[1,2,3,4,5,6,7,8,9,"",0,"⌫"].forEach(n=>{
+const b=document.createElement("button");
+b.textContent=n;
+b.onclick=()=>n==="⌫"?(pin=pin.slice(0,-1),renderDots()):n!==""&&digit(String(n));
+pad.appendChild(b);
+});
+function renderChats(){
+document.getElementById("chatlist").innerHTML=names.map(n=>'<div class="item" onclick="openChat(\''+n+'\')"><div class="avatar"></div><div><b>'+n+'</b><div class="small">点击查看聊天</div></div></div>').join("");
+}
+function openChat(n){current=n;document.getElementById("chatname").textContent=n;renderMessages();show("chat")}
+function renderMessages(){
+document.getElementById("messages").innerHTML=conversations[current].map(m=>'<div class="bubble mine"></div>').join("");
+const boxes=document.querySelectorAll("#messages .bubble");
+conversations[current].forEach((m,i)=>boxes[i].textContent=m);
+}
+function send(){
+const el=document.getElementById("msg");
+if(!el.value.trim())return;
+conversations[current].push(el.value.trim());el.value="";renderMessages();
+}
+const photos=Array.from({length:17},(_,i)=>"assets/photo"+String(i+1).padStart(2,"0")+".jpg");
+function renderPhotos(){
+for(const target of ["photos","instaphotos"]){
+document.getElementById(target).innerHTML=photos.map(src=>'<img src="'+src+'" onclick="viewPhoto(this.src)" onerror="this.outerHTML=\'<div class=placeholder></div>\'">').join("");
+}
+}
+function viewPhoto(src){document.getElementById("largephoto").src=src;document.getElementById("viewer").style.display="flex"}
+function closeViewer(){document.getElementById("viewer").style.display="none"}
+renderDots();renderChats();renderPhotos();
+</script>
+</body>
+</html>
